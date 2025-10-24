@@ -19,7 +19,7 @@
     <div class="box">
       <h3 class="text-center">Detalle de Pedido</h3>
 
-      <!-- Productos agregados -->
+
       <div class="mb-3">
         <label>Producto 1</label>
         <input type="text" class="form-control" id="prod1" placeholder="Nombre">
@@ -32,13 +32,19 @@
         <input type="number" class="form-control mt-1" id="cant2" placeholder="Cantidad" min="1" value="1">
         <input type="number" class="form-control mt-1" id="precio2" placeholder="Precio unitario" min="0" value="150">
       </div>
+      <div class="mb-3">
+        <label>Producto 3</label>
+        <input type="text" class="form-control" id="prod3" placeholder="Nombre">
+        <input type="number" class="form-control mt-1" id="cant3" placeholder="Cantidad" min="1" value="1">
+        <input type="number" class="form-control mt-1" id="precio3" placeholder="Precio unitario" min="0" value="200">
+      </div>
 
       <button id="btnVerDetalle" class="btn btn-primary w-100">Ver Detalle</button>
       <button id="btnDescargar" class="btn btn-secondary w-100 mt-2">Descargar PDF</button>
     </div>
 
     <div class="panel-box success" id="pedido-mostrado" style="display:none;">
-      <h5>Pedido Mostrado</h5>
+      <h5>Pedido Confirmado</h5>
       <p id="resumen-pedido"></p>
     </div>
 
@@ -55,45 +61,103 @@
   </div>
 
   <script>
-    const btnVerDetalle = document.getElementById('btnVerDetalle');
-    const btnDescargar = document.getElementById('btnDescargar');
 
-    function obtenerProductos() {
-      const productos = [];
-      for (let i=1; i<=2; i++) {
-        const nombre = document.getElementById('prod'+i).value.trim();
-        const cant = parseInt(document.getElementById('cant'+i).value);
-        const precio = parseFloat(document.getElementById('precio'+i).value);
-        if (nombre) productos.push({nombre, cantidad: cant, precio, subtotal: cant*precio});
+    class Producto {
+      constructor(nombre, cantidad, precio) {
+        this.nombre = nombre;
+        this.cantidad = cantidad;
+        this.precio = precio;
+        this.subtotal = cantidad * precio;
       }
-      return productos;
+      toString() {
+        return `${this.nombre} x ${this.cantidad} = $${this.subtotal}`;
+      }
     }
 
-    btnVerDetalle.addEventListener('click', () => {
-      document.getElementById('pedido-mostrado').style.display='none';
-      document.getElementById('pedido-vacio').style.display='none';
-
-      const productos = obtenerProductos();
-      if(productos.length===0){
-        document.getElementById('pedido-vacio').style.display='block';
-        return;
+    class Pedido {
+      constructor() {
+        this.productos = [];
       }
 
-      const resumen = productos.map(p => `${p.nombre} x ${p.cantidad} = $${p.subtotal}`).join(', ');
-      const total = productos.reduce((sum,p)=>sum+p.subtotal,0);
-      document.getElementById('resumen-pedido').innerText = `${resumen} | Total: $${total}`;
-      document.getElementById('pedido-mostrado').style.display='block';
+      mostrarListaBase() {
+        this.productos = [
+          new Producto("Queso Cheddar", 2, 1000),
+          new Producto("Queso Parmesano", 2, 1500),
+          new Producto("Queso Azul", 1, 1200)
+        ];
+        return this.productos;
+      }
+
+      obtenerDesdeFormulario() {
+        this.productos = [];
+        for (let i = 1; i <= 3; i++) {
+          const nombre = document.getElementById("prod" + i).value.trim();
+          const cantidad = parseInt(document.getElementById("cant" + i).value);
+          const precio = parseFloat(document.getElementById("precio" + i).value);
+          if (nombre) this.productos.push(new Producto(nombre, cantidad, precio));
+        }
+      }
+
+      validarCarrito() {
+        return this.productos.length > 0;
+      }
+
+      confirmarPedido() {
+        if (!this.validarCarrito()) {
+          return { status: "error", mensaje: "No hay productos en el pedido" };
+        }
+        const total = this.productos.reduce((sum, p) => sum + p.subtotal, 0);
+        return {
+          status: "ok",
+          mensaje: "Pedido confirmado",
+          lista: this.productos,
+          total
+        };
+      }
+    }
+
+  
+    const pedido = new Pedido();
+
+    const btnVerDetalle = document.getElementById("btnVerDetalle");
+    const btnDescargar = document.getElementById("btnDescargar");
+
+
+    window.addEventListener("DOMContentLoaded", () => {
+      const base = pedido.mostrarListaBase();
+      base.forEach((p, i) => {
+        document.getElementById("prod" + (i + 1)).value = p.nombre;
+        document.getElementById("cant" + (i + 1)).value = p.cantidad;
+        document.getElementById("precio" + (i + 1)).value = p.precio;
+      });
     });
 
-    btnDescargar.addEventListener('click', () => {
-      const productos = obtenerProductos();
-      if(productos.length===0){
-        alert('No hay productos en el pedido');
+
+    btnVerDetalle.addEventListener("click", () => {
+      document.getElementById("pedido-mostrado").style.display = "none";
+      document.getElementById("pedido-vacio").style.display = "none";
+
+      pedido.obtenerDesdeFormulario();
+      const respuesta = pedido.confirmarPedido();
+
+      if (respuesta.status === "error") {
+        document.getElementById("pedido-vacio").style.display = "block";
         return;
       }
-      document.getElementById('pdf-generado').style.display='block';
+
+      const resumen = respuesta.lista.map(p => p.toString()).join(", ");
+      document.getElementById("resumen-pedido").innerText = `${resumen} | Total: $${respuesta.total}`;
+      document.getElementById("pedido-mostrado").style.display = "block";
+    });
+
+    btnDescargar.addEventListener("click", () => {
+      pedido.obtenerDesdeFormulario();
+      if (!pedido.validarCarrito()) {
+        alert("No hay productos en el pedido");
+        return;
+      }
+      document.getElementById("pdf-generado").style.display = "block";
     });
   </script>
-
 </body>
 </html>

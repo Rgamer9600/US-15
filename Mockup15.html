@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Caja Virtual - Venta de Quesos</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <style>
+    .box { border:1px solid #000; padding:2rem; max-width:500px; margin:2rem auto; display:flex; flex-direction:column; gap:1rem; background-color:#fff; }
+    .panel-box { border:1px solid #000; padding:1rem; margin-top:1rem; border-radius:0; }
+    .success { background-color:#d5e8d4; border-color:#82b366; }
+    .error { background-color:#f8d7da; border-color:#c9302c; }
+    .warning { background-color:#fff3cd; border-color:#856404; }
+  </style>
+</head>
+<body>
+  <div class="container">
+
+    <div class="box">
+      <h3 class="text-center">Registrar Venta de Quesos</h3>
+
+      <div class="mb-3">
+        <label class="form-label">Monto Total</label>
+        <input type="number" class="form-control" id="monto" placeholder="2700">
+      </div>
+
+      <div class="mb-3">
+        <label class="form-label">Elige los quesos y cantidades</label>
+        <div class="d-flex flex-column gap-2">
+          <div>
+            <span>Queso Cheddar:</span>
+            <input type="number" class="form-control" id="cheddar" min="0" value="0">
+          </div>
+          <div>
+            <span>Queso Parmesano:</span>
+            <input type="number" class="form-control" id="parmesano" min="0" value="0">
+          </div>
+          <div>
+            <span>Queso Azul:</span>
+            <input type="number" class="form-control" id="azul" min="0" value="0">
+          </div>
+        </div>
+      </div>
+
+      <div class="mb-3">
+        <label class="form-label">Datos de Pago</label>
+        <input type="text" class="form-control" id="datosPago" placeholder="Tarjeta XXXX">
+      </div>
+
+      <button id="btnRegistrar" class="btn btn-primary w-100">Registrar Venta</button>
+    </div>
+
+    <div class="panel-box success" id="registro-exitoso" style="display:none;">
+      <h5>Registro Exitoso</h5>
+      <p>Venta de quesos reflejada correctamente en la caja virtual</p>
+      <p id="resumen-quesos"></p>
+    </div>
+
+    <div class="panel-box error" id="registro-error" style="display:none;">
+      <h5>Error en Registro</h5>
+      <p>Error al registrar venta, intente nuevamente</p>
+    </div>
+
+    <div class="panel-box warning" id="saldo-actualizado" style="display:none;">
+      <h5>Saldo Actualizado</h5>
+      <p>Monto reflejado correctamente en la caja</p>
+    </div>
+
+  </div>
+
+  <script>
+    const btnRegistrar = document.getElementById('btnRegistrar');
+
+    btnRegistrar.addEventListener('click', () => {
+      const monto = document.getElementById('monto').value;
+      const datosPago = document.getElementById('datosPago').value.trim();
+
+      // Obtener cantidades de quesos
+      const cheddar = parseInt(document.getElementById('cheddar').value) || 0;
+      const parmesano = parseInt(document.getElementById('parmesano').value) || 0;
+      const azul = parseInt(document.getElementById('azul').value) || 0;
+
+      document.getElementById('registro-exitoso').style.display = 'none';
+      document.getElementById('registro-error').style.display = 'none';
+      document.getElementById('saldo-actualizado').style.display = 'none';
+      document.getElementById('resumen-quesos').innerText = '';
+
+      if(!monto || !datosPago || (cheddar + parmesano + azul === 0)) {
+        alert("Completa todos los campos y selecciona al menos un queso");
+        return;
+      }
+
+      // Simulación de error si monto > 1000
+      if(Number(monto) > 10000) {
+        document.getElementById('registro-error').style.display = 'block';
+      } else {
+        document.getElementById('registro-exitoso').style.display = 'block';
+        document.getElementById('saldo-actualizado').style.display = 'block';
+
+        // Mostrar resumen de quesos
+        const resumen = [];
+        if(cheddar>0) resumen.push(`Queso Cheddar x${cheddar}`);
+        if(parmesano>0) resumen.push(`Queso Parmesano x${parmesano}`);
+        if(azul>0) resumen.push(`Queso Azul x${azul}`);
+        document.getElementById('resumen-quesos').innerText = resumen.join(', ');
+      }
+    });
+  </script>
+</body>
+</html>
